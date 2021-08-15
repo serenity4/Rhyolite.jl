@@ -3,6 +3,13 @@ uuid = "0a65dd64-271c-4674-ac69-445078e61614"
 authors = ["Cédric BELMANT"]
 version = "0.1.0"
 
+[deps]
+Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
+TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+Vulkan = "9f14b124-c50e-4008-a7d4-969b3a6cd68a"
+
 [compat]
 julia = "1.6"
 
