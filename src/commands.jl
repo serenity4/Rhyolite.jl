@@ -29,3 +29,21 @@ end
 macro record(cbuff, cmds)
     :(@record $cbuff CommandBufferBeginInfo() $(esc(cmds)))
 end
+
+"""
+Manages one command pool per thread.
+"""
+struct ThreadedCommandPool
+    pools::Dictionary{Int,CommandPool}
+end
+
+function ThreadedCommandPool(device, disp::QueueDispatch, usage = dictionary(1:Base.Threads.nthreads() .=> QUEUE_COMPUTE_BIT | QUEUE_GRAPHICS_BIT | QUEUE_TRANSFER_BIT))
+    pools = dictionary(thread => CommandPool(device, info(queue(disp, usage[thread])).queue_family_index) for thread in keys(usage))
+    ThreadedCommandPool(pools)
+end
+
+function Vulkan.CommandPool(pool::ThreadedCommandPool)
+    pool.pools[Base.Threads.threadid()]
+end
+
+Base.convert(T::Type{CommandPool}, pool::ThreadedCommandPool) = T(pool)

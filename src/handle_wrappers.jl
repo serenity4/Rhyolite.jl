@@ -3,14 +3,15 @@ Abstract Vulkan object accessible via a handle.
 """
 abstract type AbstractHandle{H} end
 
+Base.broadcastable(x::AbstractHandle) = Ref(x)
+
 handle_type(::Type{<:AbstractHandle{H}}) where {H} = handle_type(H)
 handle_type(T::Type{Handle}) = T
 
-handle(h::Handle) = h
 handle(r::AbstractHandle) = handle(r.handle)
 
-Vulkan.device(x::AbstractHandle) = device(handle(x))
-Vulkan.instance(x::AbstractHandle) = instance(handle(x))
+device(x::AbstractHandle) = device(handle(x))
+instance(x::AbstractHandle) = instance(handle(x))
 
 Base.unsafe_convert(T::Type{Ptr{Cvoid}}, h::AbstractHandle) = Base.unsafe_convert(T, handle(h))
 Base.convert(::Type{H}, x::AbstractHandle{H}) where {H<:Handle} = handle(x)

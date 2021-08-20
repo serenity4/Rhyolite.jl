@@ -23,7 +23,9 @@ function init(;
     device_extensions = [],
     enabled_features = PhysicalDeviceFeatures(),
     nqueues = 1,
-    queue_flags = QUEUE_COMPUTE_BIT | QUEUE_GRAPHICS_BIT,
+    queue_config = dictionary([
+        QUEUE_GRAPHICS_BIT | QUEUE_COMPUTE_BIT => 1
+    ]),
     with_validation = true,
     debug = true,
 )
@@ -47,8 +49,8 @@ function init(;
         error("Requesting unsupported instance extensions: $unsupported_extensions")
     end
 
-    instance_ci = InstanceCreateInfo(instance_layers, instance_extensions)
-    instance = Instance(instance_ci; application_info)
+    instance_ci = InstanceCreateInfo(instance_layers, instance_extensions; application_info)
+    instance = unwrap(create_instance(instance_ci))
 
     physical_device = first(unwrap(enumerate_physical_devices(instance)))
 
@@ -63,9 +65,8 @@ function init(;
         init_debug(instance)
     end
 
-    queue_family = find_queue_family(physical_device, queue_flags)
     device_ci = DeviceCreateInfo(
-        [DeviceQueueCreateInfo(queue_family, ones(Float32, nqueues))],
+        queue_infos(QueueDispatch, physical_device, queue_config),
         [],
         device_extensions;
         enabled_features,

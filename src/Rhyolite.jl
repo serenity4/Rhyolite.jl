@@ -1,10 +1,19 @@
 module Rhyolite
 
 using Vulkan
+
+import Vulkan: handle, instance, device
+
 using TimerOutputs
 using MLStyle
 using Dictionaries
 using UnPack
+
+using SPIRV: ImageType
+using SPIRV
+
+import glslang_jll
+const glslangValidator = glslang_jll.glslangValidator(identity)
 
 const to = TimerOutput()
 const Optional{T} = Union{T,Nothing}
@@ -20,6 +29,7 @@ end
 
 include("utils.jl")
 include("handle_wrappers.jl")
+include("dispatch.jl")
 include("init.jl")
 include("memory.jl")
 include("commands.jl")
@@ -28,6 +38,12 @@ include("frames.jl")
 
 include("shaders/dependencies.jl")
 include("shaders/resources.jl")
+include("shaders/vertex.jl") # type piracy
+include("shaders/formats.jl")
+include("shaders/specification.jl")
+include("shaders/source.jl")
+include("shaders/compilation.jl")
+
 include("pipelines/binding.jl")
 
 export
@@ -61,6 +77,12 @@ export
         allocate_descriptor_sets!,
         free_descriptor_sets!,
 
+        # queue dispatch
+        QueueDispatch,
+        queue_infos,
+        submit,
+        present,
+
         # frames
         Frame,
         FrameSynchronization,
@@ -71,12 +93,17 @@ export
 
         # commands
         @record,
+        ThreadedCommandPool,
 
         # shaders
         ShaderDependencies,
         ShaderResource,
+        ShaderLanguage, SPIR_V, GLSL, HLSL,
+        ShaderSpecification,
+        ShaderCache,
         SampledImage,
         StorageBuffer,
+        create_descriptor_set_layouts,
 
         # pipeline
         BindRequirements,

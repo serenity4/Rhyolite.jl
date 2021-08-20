@@ -13,7 +13,7 @@ function find_memory_type(physical_device::PhysicalDevice, type_flag, properties
     end
 end
 
-function Vulkan.DeviceMemory(device::Device, memory_requirements::MemoryRequirements, properties)
+function Vulkan.DeviceMemory(device, memory_requirements::MemoryRequirements, properties)
     DeviceMemory(device, memory_requirements.size, find_memory_type(device.physical_device, memory_requirements.memory_type_bits, properties))
 end
 

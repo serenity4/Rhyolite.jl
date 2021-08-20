@@ -10,7 +10,7 @@ struct ShaderDependencies
     descriptor_sets::Vector{Created{DescriptorSet,DescriptorSetAllocateInfo}}
 end
 
-function Vulkan.update_descriptor_sets(device::Device, shader_dependencies::ShaderDependencies, resources)
+function Vulkan.update_descriptor_sets(device, shader_dependencies::ShaderDependencies, resources)
     update_descriptor_sets(
         device,
         map(Base.Fix1(WriteDescriptorSet, shader_dependencies), resources),
@@ -18,9 +18,14 @@ function Vulkan.update_descriptor_sets(device::Device, shader_dependencies::Shad
     )
 end
 
-struct Descriptor
-    set::DescriptorSet
+struct DescriptorInfo
+    type::DescriptorType
     "1-based indexing."
     index::Int
     binding::Int
+end
+
+struct Descriptor
+    set::Created{DescriptorSet,DescriptorSetAllocateInfo}
+    info::DescriptorInfo
 end

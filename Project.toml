@@ -6,9 +6,11 @@ version = "0.1.0"
 [deps]
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
+SPIRV = "84138a67-b342-4d33-8200-33cfcca52eb2"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 Vulkan = "9f14b124-c50e-4008-a7d4-969b3a6cd68a"
+glslang_jll = "6fd5517d-459c-5c5a-9b1a-c968b4e37a81"
 
 [compat]
 julia = "1.6"
