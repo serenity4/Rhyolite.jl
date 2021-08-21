@@ -82,6 +82,7 @@ export
         queue_infos,
         submit,
         present,
+        queue_family_indices,
 
         # frames
         Frame,
@@ -100,10 +101,11 @@ export
         ShaderResource,
         ShaderLanguage, SPIR_V, GLSL, HLSL,
         ShaderSpecification,
-        ShaderCache,
+        ShaderCache, find_shader!, find_source!,
         SampledImage,
         StorageBuffer,
         create_descriptor_set_layouts,
+        vertex_input_attribute_descriptions,
 
         # pipeline
         BindRequirements,

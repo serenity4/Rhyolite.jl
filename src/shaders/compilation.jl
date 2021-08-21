@@ -4,11 +4,6 @@ end
 
 Base.showerror(io::IO, err::ShaderCompilationError) = print(io, "ShaderCompilationError:\n\n$(err.msg)")
 
-function Vulkan.ShaderModule(device, source::ShaderSource)
-    length(source.code) % 4 == 0 || pad_shader_code!(source.code)
-    ShaderModule(device, length(source.code), reinterpret(UInt32, source.code))
-end
-
 """
     compile(shader)
 
@@ -58,4 +53,13 @@ function compile(source::ShaderSource; extra_flags=[], validate_spirv=true)::Sha
     code = read(dst)
     rm(dst)
     ShaderSource(code, SPIR_V, source.stage, [entry_point])
+end
+
+function Vulkan.ShaderModule(device, source::ShaderSource)
+    length(source.code) % 4 == 0 || pad_shader_code!(source.code)
+    ShaderModule(device, length(source.code), reinterpret(UInt32, source.code))
+end
+
+function Vulkan.PipelineShaderStageCreateInfo(shader::Shader; specialization_info = C_NULL)
+    PipelineShaderStageCreateInfo(shader.source.stage, shader.shader_module, string(shader.entry_point); specialization_info)
 end

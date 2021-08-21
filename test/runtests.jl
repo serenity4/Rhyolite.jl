@@ -17,7 +17,7 @@ resource(filename) = joinpath(@__DIR__, "resources", filename)
             cmd_set_event(ev, PIPELINE_STAGE_TOP_OF_PIPE_BIT)
         end
         queue = submit(disp, QUEUE_GRAPHICS_BIT, [SubmitInfo2KHR([], [CommandBufferSubmitInfoKHR(buffer, 0)], [])])
-        @test !iserror(queue_wait_idle(queue))
+        @test unwrap(queue_wait_idle(queue)) == SUCCESS
     end
 
     @testset "Shaders" begin
@@ -56,6 +56,12 @@ resource(filename) = joinpath(@__DIR__, "resources", filename)
             free_descriptor_sets!(da, [sets; sets2])
 
             @test pool_state.allocated == dictionary([DESCRIPTOR_TYPE_STORAGE_IMAGE => 0])
+        end
+
+        @testset "Rendering" begin
+            @testset "Headless rendering" begin
+                include("headless.jl")
+            end
         end
     end
 end

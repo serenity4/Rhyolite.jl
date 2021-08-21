@@ -66,3 +66,16 @@ function present(dispatch::QueueDispatch, present_info::PresentInfoKHR)
         queue_present_khr(queue, present_info)
     end
 end
+
+function queue_family_indices(dispatch::QueueDispatch; include_present = true)
+    indices = map(dispatch.queues) do queues
+        map(queues) do queue
+            info(queue).queue_family_index
+        end
+    end
+    indices = reduce(vcat, indices)
+    if include_present && !isnothing(dispatch.present_queue)
+        push!(indices, info(dispatch.present_queue).queue_family_index)
+    end
+    sort!(unique!(indices))
+end

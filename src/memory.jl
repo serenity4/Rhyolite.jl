@@ -4,7 +4,7 @@ function find_memory_type(physical_device::PhysicalDevice, type_flag, properties
     if isempty(indices)
         error("Could not find memory with properties $properties")
     else
-        ind = findfirst(i -> type_flag & 1 << i ≠ 0, indices)
+        ind = findfirst(i -> type_flag & (1 << i) ≠ 0, indices)
         if isnothing(ind)
             error("Could not find memory with type $type_flag")
         else
