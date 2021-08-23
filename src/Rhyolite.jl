@@ -45,6 +45,7 @@ include("shaders/source.jl")
 include("shaders/compilation.jl")
 
 include("pipelines/binding.jl")
+include("pipelines/cache.jl")
 
 export
         # handles
@@ -109,6 +110,8 @@ export
 
         # pipeline
         BindRequirements,
-        BindState
+        BindState,
+        GraphicsPipelineCache,
+        get_graphics_pipelines!
 
 end # module
