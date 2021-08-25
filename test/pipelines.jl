@@ -110,12 +110,12 @@ render_pass = RenderPass(
     cache = GraphicsPipelineCache(device)
 
     # trigger JIT compilation
-    get_graphics_pipelines!(GraphicsPipelineCache(device), pipeline_infos)
+    get!(GraphicsPipelineCache(device), pipeline_infos)
     create_graphics_pipelines(device, pipeline_infos)
 
     t = @elapsed create_graphics_pipelines(device, pipeline_infos)
-    t1 = @elapsed get_graphics_pipelines!(cache, pipeline_infos)
-    t2 = @elapsed get_graphics_pipelines!(cache, pipeline_infos)
+    t1 = @elapsed get!(cache, pipeline_infos)
+    t2 = @elapsed get!(cache, pipeline_infos)
     # test pipeline creation time is not inflated
     @test t1/t < 10
     # test caching speedup

@@ -1,3 +1,9 @@
+"""
+Cache for graphics pipelines.
+
+!!! warning
+    This cache is not thread-safe.
+"""
 struct GraphicsPipelineCache
     device::Device
     pipelines::Dictionary{GraphicsPipelineCreateInfo,Pipeline}
@@ -11,10 +17,11 @@ Note that because of caching, you shouldn't expect duplicate pipelines if you pr
 If duplicates are present, the behavior differs from `Vulkan.create_graphics_pipelines` in that
 they will all be associated with the same pipeline.
 """
-function get_graphics_pipelines!(cache::GraphicsPipelineCache, create_infos::AbstractVector{GraphicsPipelineCreateInfo}; allocator = C_NULL, pipeline_cache = C_NULL)
+function Base.get!(cache::GraphicsPipelineCache, create_infos::AbstractVector{GraphicsPipelineCreateInfo}; allocator = C_NULL, pipeline_cache = C_NULL)
     info_uncached = filter(Base.Fix1(!haskey, cache.pipelines), create_infos)
     if !isempty(info_uncached)
-        foreach(zip(info_uncached, first(unwrap(create_graphics_pipelines(cache.device, info_uncached; allocator, pipeline_cache))))) do (info, pipeline)
+        (pipelines, _) = unwrap(create_graphics_pipelines(cache.device, info_uncached; allocator, pipeline_cache))
+        foreach(zip(info_uncached, pipelines)) do (info, pipeline)
             insert!(cache.pipelines, info, pipeline)
         end
     end

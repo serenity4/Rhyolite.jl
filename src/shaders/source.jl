@@ -104,20 +104,3 @@ function descriptor_infos(ir::IR)
         DescriptorInfo(type, decs[SPIRV.DecorationDescriptorSet][], decs[SPIRV.DecorationBinding][])
     end)
 end
-
-function create_descriptor_set_layouts(device, shaders::AbstractVector{Shader})
-    binding_sets = Dictionary{Int,Vector{DescriptorSetLayoutBinding}}()
-    for shader ∈ shaders
-        for info ∈ shader.descriptor_infos
-            push!(get!(binding_sets, info.index, DescriptorSetLayoutBinding[]), DescriptorSetLayoutBinding(info.binding, info.type, shader.source.stage; descriptor_count=1))
-        end
-    end
-    if !all(collect(keys(binding_sets)) .== 0:length(binding_sets) - 1)
-        error("Invalid layout description (non-contiguous binding sets from 0) in $binding_sets.")
-    end
-    layout_bindings_vec = collect(values(binding_sets))
-    map(layout_bindings_vec) do layout_binding
-        info = DescriptorSetLayoutCreateInfo(layout_binding)
-        Created(unwrap(create_descriptor_set_layout(device, info)), info)
-    end
-end

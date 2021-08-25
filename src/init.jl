@@ -1,26 +1,8 @@
-function init_debug(instance::Instance)
-    messenger = DebugUtilsMessengerEXT(
-        instance,
-        |(
-            DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
-            DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT,
-            DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
-            DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-        ),
-        |(DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT, DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT, DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT),
-        debug_callback_c[],
-        function_pointer(instance, "vkCreateDebugUtilsMessengerEXT"),
-        function_pointer(instance, "vkDestroyDebugUtilsMessengerEXT"),
-    )
-    debug_messenger[] = messenger
-    nothing
-end
-
 function init(;
-    instance_layers = [],
-    instance_extensions = [],
+    instance_layers = String[],
+    instance_extensions = String[],
     application_info = ApplicationInfo(v"1", v"1", v"1.2"),
-    device_extensions = [],
+    device_extensions = String[],
     enabled_features = PhysicalDeviceFeatures(),
     nqueues = 1,
     queue_config = dictionary([
@@ -49,7 +31,13 @@ function init(;
         error("Requesting unsupported instance extensions: $unsupported_extensions")
     end
 
-    instance_ci = InstanceCreateInfo(instance_layers, instance_extensions; application_info)
+    next = if debug
+        dbg_info = debug_info()
+    else
+        C_NULL
+    end
+
+    instance_ci = InstanceCreateInfo(instance_layers, instance_extensions; application_info, next)
     instance = unwrap(create_instance(instance_ci))
 
     physical_device = first(unwrap(enumerate_physical_devices(instance)))
@@ -62,7 +50,7 @@ function init(;
     end
 
     if debug
-        init_debug(instance)
+        init_debug(instance, dbg_info)
     end
 
     device_ci = DeviceCreateInfo(
@@ -73,4 +61,22 @@ function init(;
     )
     device = unwrap(create_device(physical_device, device_ci))
     Created(instance, instance_ci), Created(device, device_ci)
+end
+
+function init_debug(instance::Instance, info::DebugUtilsMessengerCreateInfoEXT)
+    debug_messenger[] = unwrap(create_debug_utils_messenger_ext(instance, info))
+    nothing
+end
+
+function debug_info()
+    DebugUtilsMessengerCreateInfoEXT(
+        |(
+            DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
+            DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT,
+            DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
+            DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+        ),
+        |(DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT, DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT, DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT),
+        debug_callback_c[],
+    )
 end

@@ -16,14 +16,14 @@ end
     spec = ShaderSpecification(frag_shader, GLSL)
     cache = ShaderCache(device)
     shader = Rhyolite.find_shader!(cache, spec)
-    layouts = create_descriptor_set_layouts(device, [shader])
-    sets = allocate_descriptor_sets!(da, layouts)
+    dset_layout_cache = DescriptorSetLayoutCache(device)
+    sets = allocate_descriptor_sets!(da, dset_layout_cache, [shader])
     @test length(da.pools) == 1
     pool_state = first(da.pools)
     @test pool_state.allocated == dictionary([DESCRIPTOR_TYPE_STORAGE_IMAGE => 1])
 
     # check resources are reused by the descriptor allocator
-    sets2 = allocate_descriptor_sets!(da, layouts)
+    sets2 = allocate_descriptor_sets!(da, dset_layout_cache, [shader])
     @test pool_state.allocated == dictionary([DESCRIPTOR_TYPE_STORAGE_IMAGE => 2])
 
     # check that new sets were allocated

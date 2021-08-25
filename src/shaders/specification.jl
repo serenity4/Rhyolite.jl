@@ -25,8 +25,3 @@ function ShaderSpecification(source_file; reuse_descriptors = false, entry_point
         error("Language or stage must be supplied")
     end
 end
-
-struct ShaderInfo
-    shader_stage::PipelineShaderStageCreateInfo
-    push_ranges::Vector{PushConstantRange}
-end

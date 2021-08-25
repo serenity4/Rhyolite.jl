@@ -33,7 +33,6 @@ include("dispatch.jl")
 include("init.jl")
 include("memory.jl")
 include("commands.jl")
-include("descriptor_allocator.jl")
 include("frames.jl")
 
 include("shaders/dependencies.jl")
@@ -44,8 +43,13 @@ include("shaders/specification.jl")
 include("shaders/source.jl")
 include("shaders/compilation.jl")
 
+include("descriptor_allocator.jl")
+include("descriptor_set_layouts.jl")
+
 include("pipelines/binding.jl")
 include("pipelines/cache.jl")
+
+include("draw/render_set.jl")
 
 export
         # handles
@@ -78,6 +82,9 @@ export
         allocate_descriptor_sets!,
         free_descriptor_sets!,
 
+        # descriptor set layout cache
+        DescriptorSetLayoutCache,
+
         # queue dispatch
         QueueDispatch,
         queue_infos,
@@ -105,13 +112,19 @@ export
         ShaderCache, find_shader!, find_source!,
         SampledImage,
         StorageBuffer,
+        collect_bindings,
         create_descriptor_set_layouts,
+        create_descriptor_set_layouts!,
         vertex_input_attribute_descriptions,
 
         # pipeline
         BindRequirements,
         BindState,
         GraphicsPipelineCache,
-        get_graphics_pipelines!
+
+        # render sets
+        RenderSet,
+        RenderInfo,
+        prepare!
 
 end # module

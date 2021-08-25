@@ -7,7 +7,8 @@ Describes data that an object needs to be drawn, but without having a pipeline c
 struct ShaderDependencies
     vertex_buffer::VertexBuffer
     index_buffer::Optional{IndexBuffer}
-    descriptor_sets::Vector{Created{DescriptorSet,DescriptorSetAllocateInfo}}
+    descriptor_sets::Vector{DescriptorSet}
+    set_layouts::Vector{DescriptorSetLayout}
 end
 
 function Vulkan.update_descriptor_sets(device, shader_dependencies::ShaderDependencies, resources)
@@ -20,12 +21,12 @@ end
 
 struct DescriptorInfo
     type::DescriptorType
-    "1-based indexing."
+    "1-based index into a descriptor set."
     index::Int
     binding::Int
 end
 
 struct Descriptor
-    set::Created{DescriptorSet,DescriptorSetAllocateInfo}
+    set::DescriptorSet
     info::DescriptorInfo
 end
