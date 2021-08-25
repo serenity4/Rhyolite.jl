@@ -27,3 +27,22 @@ function Base.get!(cache::GraphicsPipelineCache, create_infos::AbstractVector{Gr
     end
     map(Base.Fix1(getindex, cache.pipelines), create_infos)
 end
+
+struct PipelineLayoutCache
+    device::Device
+    layouts::Dictionary{PipelineLayoutCreateInfo,PipelineLayout}
+end
+
+PipelineLayoutCache(device) = PipelineLayoutCache(device, Dictionary{PipelineLayoutCreateInfo,PipelineLayout}())
+
+@forward PipelineLayoutCache.layouts Base.getindex, Base.haskey, Base.insert!
+
+function Base.get!(cache::PipelineLayoutCache, info::PipelineLayoutCreateInfo; allocator = C_NULL)
+    if haskey(cache, info)
+        cache[info]
+    else
+        layout = unwrap(create_pipeline_layout(cache.device, info; allocator))
+        insert!(cache, info, layout)
+        layout
+    end
+end

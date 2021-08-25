@@ -121,6 +121,7 @@ export
         BindRequirements,
         BindState,
         GraphicsPipelineCache,
+        PipelineLayoutCache,
 
         # render sets
         RenderSet,

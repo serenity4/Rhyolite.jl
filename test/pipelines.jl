@@ -121,3 +121,11 @@ render_pass = RenderPass(
     # test caching speedup
     @test t/t2 > 5
 end
+
+@testset "Pipeline layout cache" begin
+    layout_cache = PipelineLayoutCache(device)
+    info = PipelineLayoutCreateInfo([], [])
+    l1 = get!(layout_cache, info)
+    l2 = get!(layout_cache, info)
+    @test l1 === l2
+end
