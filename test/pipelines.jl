@@ -125,7 +125,8 @@ end
 @testset "Pipeline layout cache" begin
     layout_cache = PipelineLayoutCache(device)
     info = PipelineLayoutCreateInfo([], [])
+    info2 = PipelineLayoutCreateInfo([], [])
     l1 = get!(layout_cache, info)
-    l2 = get!(layout_cache, info)
+    l2 = get!(layout_cache, info2)
     @test l1 === l2
 end
