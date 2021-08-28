@@ -24,14 +24,21 @@ end
 
 Vulkan.device(fs::FrameState) = fs.device
 
+function FrameState(swapchain::Created{SwapchainKHR,SwapchainCreateInfoKHR}, render_pass)
+    max_in_flight = info(swapchain).min_image_count
+    fs = FrameState(device(render_pass), Ref(swapchain), render_pass, [], Ref{Frame}(), Ref(0), Dictionary{Frame,FrameSynchronization}())
+    update!(fs)
+end
+
 function Vulkan.SurfaceCapabilitiesKHR(fs::FrameState)
     unwrap(get_physical_device_surface_capabilities_khr(device(fs).physical_device, info(fs.swapchain[]).surface))
 end
 
 function recreate_swapchain!(fs::FrameState, new_extent::Extent2D)
-    info = setproperties(info(fs.swapchain), old_swapchain = fs.swapchain, image_extent = new_extent)
-    handle = unwrap(create_swapchain_khr(device(fs), info(fs.swapchain)))
-    fs.swapchain[] = Created(handle, info)
+    swapchain = fs.swapchain[]
+    swapchain_info = setproperties(info(swapchain), old_swapchain = handle(swapchain), image_extent = new_extent)
+    swapchain_handle = unwrap(create_swapchain_khr(device(fs), swapchain_info))
+    fs.swapchain[] = Created(swapchain_handle, swapchain_info)
     fs
 end
 
@@ -60,7 +67,7 @@ function update!(fs::FrameState)
     # TODO: make fields of returned-only structs high-level in Vulkan.jl
     _extent = SurfaceCapabilitiesKHR(fs).current_extent.vks
     new_extent = Extent2D(_extent.width, _extent.height)
-    if new_extent ≠ info(fs.swapchain).image_extent
+    if new_extent ≠ info(fs.swapchain[]).image_extent
         recreate_swapchain!(fs, new_extent)
     end
 
@@ -68,15 +75,9 @@ function update!(fs::FrameState)
     fs.current_frame[] = first(fs.frames)
 
     foreach(fs.frames) do frame
-        fs.syncs[frame] = FrameSynchronization(device(fs.render_pass))
+        insert!(fs.syncs, frame, FrameSynchronization(device(fs.render_pass)))
     end
     fs
-end
-
-function FrameState(swapchain::Created{SwapchainKHR,SwapchainCreateInfoKHR}, render_pass)
-    max_in_flight = info(swapchain).min_image_count
-    fs = FrameState(device(render_pass), Ref(swapchain), render_pass, [], Ref{Frame}(), Ref(0), Dictionary())
-    update!(fs)
 end
 
 """
@@ -129,4 +130,30 @@ end
 
 function wait_hasrendered(fs::FrameState)
     wait_for_fences(device(fs), getproperty.(fs.syncs, :has_rendered), true, typemax(UInt64))
+end
+
+"""
+Encode a lifetime context that allows the deletion of staged resources once expired.
+"""
+abstract type LifeTimeContext end
+
+"""
+Work between frames is assumed to be independent,
+and so is any resource attached to a particular piece of work.
+"""
+struct FrameContext <: LifeTimeContext
+    state::FrameState
+    pending::Vector{Any}
+end
+
+function next_frame!(ctx::FrameContext)
+    next_frame!(ctx.state)
+    foreach(ctx.pending) do resource
+        finalize(resource)
+    end
+    empty!(ctx.pending)
+end
+
+function stage!(ctx::FrameContext, resource)
+    push!(ctx.pending, resource)
 end

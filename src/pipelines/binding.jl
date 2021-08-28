@@ -1,7 +1,9 @@
 struct PipelineBindingState
     pipeline::Pipeline
-    push_ranges::Optional{PushConstantRange}
+    push_ranges::Vector{PushConstantRange}
 end
+
+PipelineBindingState(pipeline) = PipelineBindingState(pipeline, [])
 
 """
 Binding state that must be set in order for
@@ -13,6 +15,8 @@ struct BindRequirements
     layout::PipelineLayout
     push_data::Any
 end
+
+BindRequirements(dependencies, pipeline_state, layout) = BindRequirements(dependencies, pipeline_state, layout, nothing)
 
 """
 Describes the current binding state.

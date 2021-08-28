@@ -8,7 +8,6 @@ struct ShaderDependencies
     vertex_buffer::VertexBuffer
     index_buffer::Optional{IndexBuffer}
     descriptor_sets::Vector{DescriptorSet}
-    set_layouts::Vector{DescriptorSetLayout}
 end
 
 function Vulkan.update_descriptor_sets(device, shader_dependencies::ShaderDependencies, resources)

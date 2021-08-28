@@ -8,6 +8,8 @@ using TimerOutputs
 using MLStyle
 using Dictionaries
 using UnPack
+using Accessors
+using ResultTypes: ResultTypes
 
 using SPIRV: ImageType
 using SPIRV
@@ -51,6 +53,8 @@ include("pipelines/cache.jl")
 
 include("draw/render_set.jl")
 
+include("passes.jl")
+
 export
         # handles
         AbstractHandle,
@@ -74,7 +78,10 @@ export
         download_data,
         upload_data,
         buffer_size,
+        MemoryDomain,
         find_memory_type,
+        LinearAllocator,
+        reset!,
 
         # descriptor allocator
         DescriptorAllocator,
@@ -110,6 +117,7 @@ export
         ShaderLanguage, SPIR_V, GLSL, HLSL,
         ShaderSpecification,
         ShaderCache, find_shader!, find_source!,
+        Shader,
         SampledImage,
         StorageBuffer,
         collect_bindings,
@@ -126,6 +134,12 @@ export
         # render sets
         RenderSet,
         RenderInfo,
-        prepare!
+        prepare!,
+
+        # passes
+        PassType,
+        OpaqueShadingPass,
+        LightingPass,
+        TransparentShadingPass
 
 end # module

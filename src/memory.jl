@@ -1,4 +1,4 @@
-function find_memory_type(physical_device::PhysicalDevice, type_flag, properties::MemoryPropertyFlag)
+function find_memory_type(physical_device, type_flag, properties::MemoryPropertyFlag)
     mem_props = get_physical_device_memory_properties(physical_device)
     indices = findall(x -> properties in x.property_flags, mem_props.memory_types[1:mem_props.memory_type_count]) .- 1
     if isempty(indices)
@@ -8,17 +8,95 @@ function find_memory_type(physical_device::PhysicalDevice, type_flag, properties
         if isnothing(ind)
             error("Could not find memory with type $type_flag")
         else
-            indices[ind]
+            indices[ind], mem_props[indices[ind]]
         end
     end
 end
 
-function Vulkan.DeviceMemory(device, memory_requirements::MemoryRequirements, properties)
-    DeviceMemory(device, memory_requirements.size, find_memory_type(device.physical_device, memory_requirements.memory_type_bits, properties))
+"""
+Memory domains:
+- `MEMORY_DOMAIN_HOST` is host-visible memory, ideal for uploads to the GPU. It is preferably coherent and non-cached.
+- `MEMORY_DOMAIN_HOST_CACHED` is host-visible, cached memory, ideal for readbacks from the GPU. It is preferably coherent.
+- `MEMORY_DOMAIN_DEVICE` is device-local. It may be visible (integrated GPUs).
+"""
+@enum MemoryDomain::Int8 begin
+    MEMORY_DOMAIN_HOST
+    MEMORY_DOMAIN_HOST_CACHED
+    MEMORY_DOMAIN_DEVICE
 end
 
-buffer_size(data::AbstractVector{T}) where {T} = sizeof(T) * length(data)
+function score(domain::MemoryDomain, properties)
+    @match domain begin
+        &MEMORY_DOMAIN_HOST => 10 * MEMORY_PROPERTY_HOST_VISIBLE_BIT in properties + MEMORY_PROPERTY_HOST_COHERENT_BIT in properties - MEMORY_PROPERTY_HOST_CACHED_BIT in propetries
+        &MEMORY_DOMAIN_HOST_CACHED => 10 * MEMORY_PROPERTY_HOST_VISIBLE_BIT | MEMORY_PROPERTY_HOST_CACHED_BIT in properties + MEMORY_PROPERTY_HOST_COHERENT_BIT in properties
+        &MEMORY_DOMAIN_DEVICE => MEMORY_PROPERTY_DEVICE_LOCAL_BIT in properties
+    end
+end
+
+function find_memory_type(f, physical_device, type_flag)
+    mem_props = get_physical_device_memory_properties(physical_device)
+    memtypes = mem_props.memory_types[1:mem_props.memory_type_count]
+    candidate_indices = findall(i -> type_flag & (1 << i) ≠ 0, 0:length(memtypes) - 1)
+    index, mem_prop = findmax(i -> f(memtypes[i + 1].property_flags), candidate_indices)
+    index, mem_prop
+end
+
+find_memory_type(physical_device, type_flag, domain::MemoryDomain) = find_memory_type(Base.Fix1(score, domain), physical_device, type_flag)
+
+mutable struct LinearAllocator
+    memory::DeviceMemory
+    size::Int
+    properties::MemoryPropertyFlag
+    last_offset::Int
+end
+
+device(allocator::LinearAllocator) = allocator.memory.device
+
+function LinearAllocator(device::Device, size, properties)
+    memory = DeviceMemory(device, size, properties)
+    la = LinearAllocator(memory, size, properties, 0)
+    map_memory(la)
+    finalizer(unmap_memory, la)
+end
+
+function Vulkan.bind_buffer_memory(buffer, allocator::LinearAllocator, size, alignment)::ResultTypes.Result{Result,VulkanError}
+    offset = alignment * cld(allocator.last_offset, alignment)
+    ret = bind_buffer_memory(device(allocator), buffer, allocator.memory, offset)
+    if !iserror(ret)
+        allocator.last_offset = offset + size
+    end
+    ret
+end
+
+function Vulkan.map_memory(allocator::LinearAllocator, offset::Integer, size::Integer)
+    if MEMORY_PROPERTY_HOST_COHERENT_BIT ∉ allocator.properties
+        invalidate_mapped_memory_ranges(device(allocator), [MappedMemoryRange(allocator.memory, offset, size)])
+    end
+    map_memory(device(allocator), allocator.memory, offset, size)
+end
+
+function Vulkan.unmap_memory(allocator::LinearAllocator)
+    if MEMORY_PROPERTY_HOST_COHERENT_BIT ∉ allocator.properties
+        flush_mapped_memory_ranges(device(allocator), [MappedMemoryRange(allocator.memory, 0, allocator.size)])
+    end
+    unmap_memory(device(allocator), allocator.memory)
+end
+
+function reset!(allocator::LinearAllocator)
+    allocator.last_offset = 0
+end
+
+buffer_size(data::DenseVector{T}) where {T} = sizeof(T) * length(data)
 buffer_size(data) = sizeof(data)
+
+# struct MemoryManager
+#     allocators::Dictionary{MemoryDomain,}
+# end
+
+function Vulkan.DeviceMemory(device, memory_requirements::MemoryRequirements, properties)
+    i, _ = find_memory_type(device.physical_device, memory_requirements.memory_type_bits, properties)
+    DeviceMemory(device, memory_requirements.size, i)
+end
 
 """
 Upload data to the specified memory.

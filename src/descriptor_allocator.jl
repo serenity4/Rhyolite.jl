@@ -119,3 +119,27 @@ function free_descriptor_sets!(da::DescriptorAllocator, sets)
     end
     nothing
 end
+
+struct DescriptorSetCache
+    used::Dictionary{UInt,Vector{DescriptorSet}}
+    unused::Dictionary{DescriptorSet,Int8}
+    recycled::Dictionary{UInt,DescriptorSet}
+    allocator::DescriptorAllocator
+end
+
+function DescriptorSetCache(device::Device)
+    DescriptorSetCache(
+        Dictionary{UInt,Vector{DescriptorSet}}(),
+        Dictionary{DescriptorSet,Int8}(),
+        Dictionary{UInt,DescriptorSet}(),
+        DescriptorAllocator(device),
+    )
+end
+
+function get_descriptor_set!(cache::DescriptorSetCache, key::UInt)
+    
+end
+
+function cycle!(cache::DescriptorSetCache)
+
+end

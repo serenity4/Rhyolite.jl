@@ -5,6 +5,15 @@ struct RenderInfo
     push_data::Any
 end
 
+function RenderInfo(
+        deps::ShaderDependencies,
+        draw_args;
+        pipeline = Ref{Created{Pipeline,GraphicsPipelineCreateInfo}}(),
+        push_data = nothing,
+    )
+    RenderInfo(deps, draw_args, pipeline, push_data)
+end
+
 struct RenderSet
     pipeline_cache::GraphicsPipelineCache
     render_infos::Dictionary{Any,RenderInfo}
@@ -12,6 +21,8 @@ end
 
 RenderSet(device) = RenderSet(GraphicsPipelineCache(device))
 RenderSet(cache::GraphicsPipelineCache) = RenderSet(cache, Dictionary{Any,RenderInfo}())
+
+@forward RenderSet.render_infos Base.insert!, Dictionaries.set!, Base.setindex!
 
 function prepare!(f, set::RenderSet)
     batch = Dictionary{GraphicsPipelineCreateInfo,Ref{Pipeline}}()
@@ -29,7 +40,7 @@ end
 
 function prepare_pipeline!(f, batch, set::RenderSet, object, info)
     if !isdefined(info.pipeline, 1)
-        insert!(batch, info.pipeline, f(set.pipeline_cache.device, object))
+        insert!(batch, info.pipeline, f(object))
     end
 end
 
