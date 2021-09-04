@@ -14,6 +14,7 @@ end
 Entity which manages descriptor pools and descriptor sets.
 """
 struct DescriptorAllocator
+    set_layout::DescriptorSetLayout
     device::Device
     pools::Dictionary{DescriptorPool,DescriptorPoolState}
     allocations::Dictionary{DescriptorSet,PoolAllocations}
@@ -94,30 +95,6 @@ function allocate_descriptor_sets!(da::DescriptorAllocator, layouts::Vector{Crea
     end
 
     Created.(sets, allocate_info)
-end
-
-"""
-Free descriptor sets from a descriptor allocator.
-
-!!! warning
-    All descriptor sets must have been allocated with the same pool, through the same descriptor allocator.
-    They may, however, have been allocated in several times.
-"""
-function free_descriptor_sets!(da::DescriptorAllocator, sets)
-    pool_allocs = Dictionary{DescriptorPool,Vector{PoolAllocations}}()
-    foreach(handle.(sets)) do set
-        set_allocs = da.allocations[set]
-        push!(get!(pool_allocs, set_allocs.pool, PoolAllocations[]), set_allocs)
-    end
-    foreach(pairs(pool_allocs)) do (pool, allocs)
-        foreach(allocs) do alloc
-            for (type, count) in pairs(alloc.allocated)
-                da.pools[pool].allocated[type] -= count
-            end
-        end
-        free_descriptor_sets(da.device, pool, getproperty.(allocs, :set))
-    end
-    nothing
 end
 
 struct DescriptorSetCache

@@ -4,36 +4,36 @@ struct OpaqueShadingPass <: PassType end
 struct LightingPass <: PassType end
 struct TransparentShadingPass <: PassType end
 
-function Vulkan.PipelineColorBlendStateCreateInfo(pass::PassType)
-    PipelineColorBlendStateCreateInfo(
+function Vk.PipelineColorBlendStateCreateInfo(pass::PassType)
+    Vk.PipelineColorBlendStateCreateInfo(
         false,
-        LOGIC_OP_AND,
-        [PipelineColorBlendAttachmentState(pass)],
+        Vk.LOGIC_OP_AND,
+        [Vk.PipelineColorBlendAttachmentState(pass)],
     )
 end
 
-function Vulkan.PipelineColorBlendAttachmentState(pass::OpaqueShadingPass)
-    PipelineColorBlendAttachmentState(
+function Vk.PipelineColorBlendAttachmentState(pass::OpaqueShadingPass)
+    Vk.PipelineColorBlendAttachmentState(
         false,
-        BLEND_FACTOR_ONE,
-        BLEND_FACTOR_ZERO,
-        BLEND_OP_ADD,
-        BLEND_FACTOR_ONE,
-        BLEND_FACTOR_ZERO,
-        BLEND_OP_ADD;
-        color_write_mask = COLOR_COMPONENT_R_BIT | COLOR_COMPONENT_G_BIT | COLOR_COMPONENT_B_BIT
+        Vk.BLEND_FACTOR_ONE,
+        Vk.BLEND_FACTOR_ZERO,
+        Vk.BLEND_OP_ADD,
+        Vk.BLEND_FACTOR_ONE,
+        Vk.BLEND_FACTOR_ZERO,
+        Vk.BLEND_OP_ADD;
+        color_write_mask = Vk.COLOR_COMPONENT_R_BIT | Vk.COLOR_COMPONENT_G_BIT | Vk.COLOR_COMPONENT_B_BIT
     )
 end
 
-function Vulkan.PipelineColorBlendAttachmentState(pass::TransparentShadingPass)
-    PipelineColorBlendAttachmentState(
+function Vk.PipelineColorBlendAttachmentState(pass::TransparentShadingPass)
+    Vk.PipelineColorBlendAttachmentState(
         true,
-        BLEND_FACTOR_SRC_ALPHA,
-        BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        BLEND_OP_ADD,
-        BLEND_FACTOR_SRC_ALPHA,
-        BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        BLEND_OP_ADD;
-        color_write_mask = COLOR_COMPONENT_R_BIT | COLOR_COMPONENT_G_BIT | COLOR_COMPONENT_B_BIT | COLOR_COMPONENT_A_BIT
+        Vk.BLEND_FACTOR_SRC_ALPHA,
+        Vk.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        Vk.BLEND_OP_ADD,
+        Vk.BLEND_FACTOR_SRC_ALPHA,
+        Vk.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        Vk.BLEND_OP_ADD;
+        color_write_mask = Vk.COLOR_COMPONENT_R_BIT | Vk.COLOR_COMPONENT_G_BIT | Vk.COLOR_COMPONENT_B_BIT | Vk.COLOR_COMPONENT_A_BIT
     )
 end

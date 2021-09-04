@@ -1,4 +1,4 @@
-function find_memory_type(physical_device, type_flag, properties::MemoryPropertyFlag)
+function find_memory_type(physical_device, type_flag, properties::Vk.MemoryPropertyFlag)
     mem_props = get_physical_device_memory_properties(physical_device)
     indices = findall(x -> properties in x.property_flags, mem_props.memory_types[1:mem_props.memory_type_count]) .- 1
     if isempty(indices)

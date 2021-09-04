@@ -1,15 +1,15 @@
 module Rhyolite
 
-using Vulkan
+import Vulkan
+const Vk = Vulkan
 
-import Vulkan: handle, instance, device
+using ResultTypes
 
 using TimerOutputs
 using MLStyle
 using Dictionaries
 using UnPack
 using Accessors
-using ResultTypes: ResultTypes
 
 using SPIRV: ImageType
 using SPIRV
@@ -21,7 +21,7 @@ const to = TimerOutput()
 const Optional{T} = Union{T,Nothing}
 
 const debug_callback_c = Ref{Ptr{Cvoid}}(C_NULL)
-const debug_messenger = Ref{DebugUtilsMessengerEXT}()
+const debug_messenger = Ref{Vk.DebugUtilsMessengerEXT}()
 
 function __init__()
     # for debugging in Vulkan
@@ -54,6 +54,7 @@ include("pipelines/cache.jl")
 include("draw/render_set.jl")
 
 include("passes.jl")
+include("device.jl")
 
 export
         # handles
